@@ -1,7 +1,16 @@
-<center><h1>Housu 后素</h1></center>
+<div align="center">
+<img src="icon.png" alt="Housu — 后素 in soft amber" width="200">
+</div>
+
+# Housu 后素
 
 A calm charcoal theme for VS Code, inspired by
 [Gruber Darker](https://github.com/rexim/gruber-darker-theme).
+
+The icon spells **后素** (*hòu sù*), a name drawn from **绘事后素** in
+the *Analects* — often understood as “painting follows the plain ground.”
+For Housu, it expresses a simple idea: start with a quiet foundation, then add
+color where it helps. The soft amber lettering reflects that restraint.
 
 Warm gray text, amber keywords, blue types, sage strings and lavender literals
 keep code readable. Active tabs and selections have distinct backgrounds;
