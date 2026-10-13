@@ -1,0 +1,64 @@
+{
+  "name": "housu",
+  "displayName": "Housu",
+  "description": "A calm charcoal VS Code theme with warm amber structure, soft syntax colors and distinct editor tabs.",
+  "publisher": "ref42",
+  "version": "0.7.1",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.73.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "keywords": [
+    "theme",
+    "dark",
+    "black",
+    "gruber",
+    "gruber darker",
+    "gruber dark",
+    "color theme"
+  ],
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#18191b",
+    "theme": "dark"
+  },
+  "contributes": {
+    "themes": [
+      {
+        "label": "Housu",
+        "uiTheme": "vs-dark",
+        "path": "./themes/housu-color-theme.json"
+      }
+    ],
+    "configurationDefaults": {
+      "workbench.colorCustomizations": {
+        "[Housu]": {
+          "modernEditorTab.activeBackground": "#30363e",
+          "modernEditorTab.activeForeground": "#d7b87b",
+          "modernEditorTab.inactiveBackground": "#1c1d1f",
+          "modernEditorTab.hoverBackground": "#2b2e33",
+          "modernEditorTab.hoverForeground": "#d3d1cc",
+          "modernEditorTab.activeHoverBackground": "#2b2e33"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "validate": "node scripts/validate.js",
+    "build": "npm run package",
+    "package": "npx --yes @vscode/vsce@4.0.0 package --no-dependencies --out housu.vsix",
+    "vscode:prepublish": "npm run validate",
+    "install:local": "code --install-extension housu.vsix --force"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ref42/housu.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ref42/housu/issues"
+  },
+  "homepage": "https://github.com/ref42/housu#readme"
+}

@@ -1,0 +1,8 @@
+# Only these release files belong in the extension package.
+**/*
+!package.json
+!README.md
+!LICENSE.md
+!icon.png
+!themes/**
+!screenshots/rust.png
