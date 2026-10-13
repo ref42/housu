@@ -12,9 +12,18 @@ the *Analects* — often understood as “painting follows the plain ground.”
 For Housu, it expresses a simple idea: start with a quiet foundation, then add
 color where it helps. The soft amber lettering reflects that restraint.
 
-Warm gray text, amber keywords, blue types, sage strings and lavender literals
-keep code readable. Active tabs and selections have distinct backgrounds;
-comments stay legible without competing with the code.
+The main palette uses four quiet colors: charcoal surfaces, warm gray text,
+muted blue structure, and amber emphasis. Red and green remain available for
+functional feedback such as errors and diffs. Active tabs and selections have
+distinct backgrounds; comments stay legible without competing with the code.
+The visual balance is roughly 60% charcoal surface, 30% neutral content, and
+10% accent color, so emphasis remains easy to scan.
+
+Selected text uses a distinct blue background that preserves syntax colors.
+Comments use the same warm gray so they stay readable when selected.
+Inactive selections use a quieter blue tint; search matches and symbol
+references retain their borders so they are distinguishable from selected text.
+Whitespace markers use VS Code's normal dark-theme defaults so they stay subtle.
 
 ![Housu in VS Code](screenshots/rust.png)
 
@@ -43,9 +52,9 @@ npm run validate
 ```
 
 The dependency-free Node validator checks release metadata,
-color values, required highlight transparency, tab consistency and 2,616 text
-contrast pairs. All checked text meets WCAG AA (4.5:1); the current minimum is
-4.87:1. Alpha backgrounds are composited before measurement. VS Code's theme
+color values, required highlight transparency, tab and selection visibility, and
+thousands of text contrast pairs. All checked text meets WCAG AA (4.5:1). Alpha
+backgrounds are composited before measurement. VS Code's theme
 JSON schema supplies color-ID validation while editing.
 
 Font family, size and spacing follow your editor preferences. Display brightness
@@ -55,8 +64,8 @@ and room lighting also affect reading comfort.
 
 Update the version in `package.json`, run `npm run build`, and review `housu.vsix`.
 Upload that file to the VS Code Marketplace publisher dashboard or attach it to
-a GitHub release. Generated packages are ignored by Git. `.vscodeignore` limits
-the extension package to its release files.
+a GitHub release. The repository keeps the current `housu.vsix` as a convenient
+download; `.vscodeignore` limits each extension package to its release files.
 
 ## License
 

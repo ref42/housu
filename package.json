@@ -3,7 +3,7 @@
   "displayName": "Housu",
   "description": "A calm charcoal VS Code theme with warm amber structure, soft syntax colors and distinct editor tabs.",
   "publisher": "ref42",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.73.0"

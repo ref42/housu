@@ -11,7 +11,9 @@ const transparentKeys = [
   'editor.findMatchHighlightBackground', 'editor.inactiveSelectionBackground',
   'editor.wordHighlightBackground', 'editor.wordHighlightStrongBackground',
   'editor.wordHighlightTextBackground', 'editor.foldBackground',
+  'editor.selectionHighlightBackground',
   'diffEditor.insertedTextBackground', 'diffEditor.removedTextBackground',
+  'diffEditor.insertedLineBackground', 'diffEditor.removedLineBackground',
 ];
 for (const key of ['name', 'displayName', 'description', 'publisher', 'version']) {
   assert(pkg[key], 'Missing package field: ' + key);
@@ -21,7 +23,8 @@ assert(pkg.engines.vscode && pkg.categories.includes('Themes'), 'Missing VS Code
 assert.equal(pkg.license, 'MIT');
 const license = fs.readFileSync(path.join(root, 'LICENSE.md'), 'utf8');
 assert(license.includes('MIT License') && license.includes('gruber-darker-theme'), 'Missing license or upstream attribution');
-for (const file of [pkg.icon, 'README.md']) assert(fs.existsSync(path.join(root, file)), 'Missing ' + file);
+for (const file of [pkg.icon, 'README.md', 'CHANGELOG.md']) assert(fs.existsSync(path.join(root, file)), 'Missing ' + file);
+assert(fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8').includes('## ' + pkg.version + '\n'), 'Missing changelog entry for release');
 assert(pkg.contributes.themes.length > 0, 'No contributed theme');
 
 
@@ -52,7 +55,26 @@ for (const entry of pkg.contributes.themes) {
   for (const key of transparentKeys) {
     assert(c[key] && rgba(c[key])[3] < 1, key + ' must be transparent');
   }
+  for (const prefix of ['editorInlayHint.', 'editorInlayHint.type', 'editorInlayHint.parameter']) {
+    const key = prefix + (prefix.endsWith('.') ? 'background' : 'Background');
+    assert.equal(rgba(c[key])[3], 0, key + ' must not interrupt selections');
+  }
+  for (const [focused, base] of [
+    ['list.focusBackground', 'sideBar.background'],
+    ['list.activeSelectionBackground', 'sideBar.background'],
+    ['editorSuggestWidget.selectedBackground', 'editorSuggestWidget.background'],
+    ['quickInputList.focusBackground', 'quickInput.background'],
+    ['menu.selectionBackground', 'menu.background'],
+  ]) {
+    assert(contrast(c[focused], rgba(c[base])) >= 1.3, focused + ' must stand out from its surface');
+  }
   assert(contrast(c['tab.activeBackground'], rgba(c['tab.inactiveBackground'])) >= 1.15, 'Active and inactive tabs must differ');
+  // Selection needs a visible boundary as well as readable text. The 1.5:1
+  // surface threshold is a project regression guard, not a WCAG text rule.
+  for (const base of ['editor.background', 'editor.lineHighlightBackground']) {
+    const selected = over(rgba(c['editor.selectionBackground']), rgba(c[base]));
+    assert(contrast(c[base], selected) >= 1.5, 'Selection must stand out against ' + base);
+  }
   const scoped = pkg.contributes.configurationDefaults['workbench.colorCustomizations']['[' + entry.label + ']'];
   assert(scoped, 'Missing theme-scoped tab defaults');
   for (const [key, value] of Object.entries(scoped)) {
@@ -131,13 +153,30 @@ for (const entry of pkg.contributes.themes) {
     'settings.settingsHeaderHoverForeground': ['editor.background'],
   };
   for (const [fg, backgrounds] of Object.entries(specific)) for (const bg of backgrounds) pair(fg, bg);
-  const listSurfaces = ['sideBar.background', 'list.activeSelectionBackground', 'list.inactiveSelectionBackground', 'list.focusBackground', 'list.hoverBackground', 'quickInput.background'];
+  const listSurfaces = ['sideBar.background', 'list.activeSelectionBackground', 'list.inactiveSelectionBackground', 'list.focusBackground', 'list.hoverBackground', 'quickInput.background', 'quickInputList.focusBackground', 'editorSuggestWidget.selectedBackground', 'menu.selectionBackground'];
   for (const fg of ['foreground', 'descriptionForeground', 'list.highlightForeground', 'list.focusHighlightForeground', 'list.deemphasizedForeground', 'list.errorForeground', 'list.warningForeground', ...Object.keys(c).filter(k => k.startsWith('gitDecoration.'))]) {
     for (const bg of listSurfaces) pair(fg, bg);
   }
   for (const fg of Object.keys(c).filter(k => k.startsWith('terminal.ansi'))) {
-    pair(fg, 'terminal.background');
-    pair(fg, 'terminal.selectionBackground');
+    // ANSI black is intentionally dark: terminal apps also use it as a
+    // background and as text on light ANSI backgrounds (e.g. status bars).
+    if (fg !== 'terminal.ansiBlack') pair(fg, 'terminal.background');
+    pair(c['terminal.selectionForeground'] ? 'terminal.selectionForeground' : fg, 'terminal.selectionBackground');
+    if (fg !== 'terminal.ansiBlack') {
+      pair(fg, 'terminal.ansiBlack');
+      pair('terminal.ansiBlack', fg);
+    }
+  }
+  for (const name of ['Black', 'Red', 'Green', 'Yellow', 'Blue', 'Magenta', 'Cyan', 'White']) {
+    assert(luminance(rgba(c['terminal.ansiBright' + name])) > luminance(rgba(c['terminal.ansi' + name])), 'ANSI bright ' + name + ' must be lighter');
+  }
+  for (const fg of ['editorInlayHint.foreground', 'editorInlayHint.typeForeground', 'editorInlayHint.parameterForeground']) {
+    for (const base of ['editor.background', 'editor.lineHighlightBackground']) {
+      pair(fg, base);
+      for (const overlay of ['editor.selectionBackground', 'editor.inactiveSelectionBackground']) {
+        check(`${fg} on ${overlay} over ${base}`, c[fg], over(rgba(c[overlay]), rgba(c[base])));
+      }
+    }
   }
   // Syntax must survive selection, search, diff and line highlighting, not
   // just the bare editor canvas. Never allow transparent bracket glyphs.
@@ -148,12 +187,18 @@ for (const entry of pkg.contributes.themes) {
     ...Object.entries(c).filter(([key]) => key.startsWith('editorBracketHighlight.')),
   ];
   const editorSurfaces = ['editor.background', 'editorWidget.background', 'peekViewEditor.background', 'textCodeBlock.background', 'textBlockQuote.background'];
-  const overlays = ['editor.selectionBackground', 'editor.inactiveSelectionBackground', 'editor.findMatchBackground', 'editor.findMatchHighlightBackground', 'editor.wordHighlightBackground', 'editor.wordHighlightStrongBackground', 'editor.wordHighlightTextBackground', 'editor.foldBackground', 'editor.stackFrameHighlightBackground', 'editorBracketMatch.background', 'diffEditor.insertedTextBackground', 'diffEditor.removedTextBackground'];
+  const overlays = ['editor.selectionBackground', 'editor.inactiveSelectionBackground', 'editor.selectionHighlightBackground', 'editor.findMatchBackground', 'editor.findMatchHighlightBackground', 'editor.wordHighlightBackground', 'editor.wordHighlightStrongBackground', 'editor.wordHighlightTextBackground', 'editor.foldBackground', 'editor.stackFrameHighlightBackground', 'editorBracketMatch.background', 'diffEditor.insertedTextBackground', 'diffEditor.removedTextBackground', 'diffEditor.insertedLineBackground', 'diffEditor.removedLineBackground'];
   for (const [label, fg] of syntax) {
     for (const bg of editorSurfaces) check(`${label} on ${bg}`, fg, rgba(c[bg]));
     for (const base of ['editor.background', 'editor.lineHighlightBackground']) {
       check(`${label} on ${base}`, fg, rgba(c[base]));
+      // In a dark theme, VS Code retains syntax colors even when an
+      // editor.selectionForeground is provided (that override is HC-only).
       for (const overlay of overlays) check(`${label} on ${overlay} over ${base}`, fg, over(rgba(c[overlay]), rgba(c[base])));
+      for (const kind of ['inserted', 'removed']) {
+        const line = over(rgba(c[`diffEditor.${kind}LineBackground`]), rgba(c[base]));
+        check(`${label} on layered ${kind} diff over ${base}`, fg, over(rgba(c[`diffEditor.${kind}TextBackground`]), line));
+      }
     }
   }
   console.log(`${entry.label}: ${checks} text contrast checks; minimum ${minimum.toFixed(2)}:1`);

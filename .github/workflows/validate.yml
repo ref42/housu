@@ -1,0 +1,26 @@
+name: Validate and package
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and build VSIX
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: housu-vsix
+          path: housu.vsix
+          if-no-files-found: error
+          retention-days: 14
