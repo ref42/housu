@@ -1,4 +1,4 @@
-# Housu 后素
+<center><h1>Housu 后素</h1></center>
 
 A calm charcoal theme for VS Code, inspired by
 [Gruber Darker](https://github.com/rexim/gruber-darker-theme).
